@@ -27,10 +27,10 @@ test.static:
 run: deps test
 
 .PHONY: deps
-deps: data/emoji_pages.csv
+deps: data/page_emojis.json
 
-data/emoji_pages.csv: data
-	python v0/fetch_emoji_refs.py data/emoji_pages.csv
+data/page_emojis.json: data
+	python v0/fetch_emoji_refs.py $@
 
 data:
-	mkdir data
+	mkdir -p data/html

@@ -27,7 +27,10 @@ test.static:
 run: deps test
 
 .PHONY: deps
-deps: data/page_emojis.json
+deps: data/html_emojis.json
+
+data/html_emojis.json: data/page_emojis.json
+	python v0/fetch_emoji_descriptions.py $< data/html
 
 data/page_emojis.json: data
 	python v0/fetch_emoji_refs.py $@

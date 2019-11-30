@@ -2,13 +2,45 @@
 Analyze wikipedia descriptions of emojis.
 """
 import argparse
+import collections
 import glob
 import json
 import os
 import pickle
 
+from nltk.corpus import stopwords
+from nltk.stem.snowball import SnowballStemmer
+from nltk.tokenize import word_tokenize
+
 from lxml import etree
 import sklearn.feature_extraction.text
+
+
+def preprocess(text, min_words=2):
+    stops = set(stopwords.words("english"))
+    stemmer = SnowballStemmer("english")
+
+    words = []
+    for word in word_tokenize(text):
+        if (  # pylint: disable=bad-continuation
+            word in stops
+            or sum(map(word.count, ":/-")) > 1
+            or sum(x.isalpha() for x in word) == 0
+        ):
+            continue
+
+        stemmed = stemmer.stem(word)
+        if stemmed in stops:
+            continue
+
+        words.append(stemmed)
+
+    counts = collections.Counter(words)
+    words = [
+        " ".join(k for _ in range(v)) for k, v in counts.most_common() if v >= min_words
+    ]
+
+    return " ".join(words)
 
 
 def main(fpath, html_dir):
@@ -38,7 +70,7 @@ def main(fpath, html_dir):
         index.append(pageid_emojis[pageid])
 
     vectorizer = sklearn.feature_extraction.text.TfidfVectorizer(
-        max_features=10000, min_df=2, stop_words="english"  # use list later if possible
+        max_features=10000, min_df=1, preprocessor=preprocess
     )
 
     print("Fitting Model. This may take a while...")

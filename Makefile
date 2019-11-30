@@ -23,17 +23,29 @@ test.static:
 	pylint v0
 
 # Exec ]-----------------------------------------------
+.PHONY: analyze
+analyze: build/model.pckl
+	python v0/analyze.py $<
+
+build/model.pckl:
+	python v0/trainer.py $< data/html
+
 .PHONY: run
-run: deps test
+run: data/page_emojis.json build # test
+	python v0/trainer.py $< data/html
 
 .PHONY: deps
 deps: data/html_emojis.json
 
-data/html_emojis.json: data/page_emojis.json
-	python v0/fetch_emoji_descriptions.py $< data/html
+data/html: data/page_emojis.json
+	mkdir -p $@
+	python v0/fetch_emoji_descriptions.py $< $@
 
 data/page_emojis.json: data
 	python v0/fetch_emoji_refs.py $@
 
 data:
-	mkdir -p data/html
+	mkdir -p $@
+
+build:
+	mkdir -p $@
